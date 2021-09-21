@@ -9,7 +9,7 @@ exports.signup = (req, res, next) => {
     bcrypt.hash(req.body.password, 10)
         .then(hash => {
             const user = new User({
-                email: req.body.email, 
+                email: crypto.HmacSHA256(req.body.email, process.env.EMAIL_KEY).toString(), 
                 password: hash
             });
             user.save()
@@ -20,7 +20,7 @@ exports.signup = (req, res, next) => {
 };
 
 exports.login = (req, res, next) => {
-    const cryptedResearchedEmail = req.body.email;
+    const cryptedResearchedEmail = crypto.HmacSHA256(req.body.email, process.env.EMAIL_KEY).toString();
     User.findOne( { email: cryptedResearchedEmail })
         .then(user => {
             if (!user) {
