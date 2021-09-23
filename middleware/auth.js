@@ -1,10 +1,9 @@
-const jsonwebtoken = require('jsonwebtoken');
-require('dotenv').config();
+const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
     try {
-        const token = req.session.token;  
-        const decodedToken = jsonwebtoken.verify(token, process.env.TOKEN_KEY);
+        const token = req.headers.authorization.split(' ')[1];  
+        const decodedToken = jwt.verify(token, 'RANDOM_TOKEN_SECRET');
         const userId = decodedToken.userId;
         if (req.body.userId && req.body.userId !== userId) {
             console.log("User ID non valable");

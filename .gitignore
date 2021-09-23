@@ -1,2 +1,4 @@
 node_modules
 images
+package_lock.json
+access.log

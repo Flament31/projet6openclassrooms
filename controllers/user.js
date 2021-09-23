@@ -1,48 +1,47 @@
 const bcrypt = require('bcrypt');
-const jsonwebtoken = require('jsonwebtoken');
-const crypto = require('crypto-js');
-
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 require('dotenv').config();
 
 exports.signup = (req, res, next) => {
-    bcrypt.hash(req.body.password, 10)
+    if (!/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.{6,})/.test(req.body.password)) {
+      return res.status(401).json({ error: 'Le mot de passe doit contenir une lettre majuscule, une minuscule et au moins 1 chiffre (6 caractères min)' });
+    } else {
+      bcrypt.hash(req.body.password, 10)
         .then(hash => {
-            const user = new User({
-                email: crypto.HmacSHA256(req.body.email, process.env.EMAIL_KEY).toString(), 
-                password: hash
-            });
-            user.save()
-                .then(() => res.status(201).json({ message: 'Utilisateur créé'}))
-                .catch(error => res.status(400).json({ error }));
+          const user = new User({
+            email: req.body.email,
+            password: hash
+          })
+          user.save()
+            .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
+            .catch(error => res.status(400).json({ error }));
         })
         .catch(error => res.status(500).json({ error }));
-};
+    }
+  };
 
 exports.login = (req, res, next) => {
-    const cryptedResearchedEmail = crypto.HmacSHA256(req.body.email, process.env.EMAIL_KEY).toString();
-    User.findOne( { email: cryptedResearchedEmail })
-        .then(user => {
-            if (!user) {
-                return res.status(401).json({ error: 'Utilisateur non trouvé!' })
+    User.findOne({ email: req.body.email }) 
+      .then(user => {
+        if (!user) {
+          return res.status(401).json({ error: 'Utilisateur non trouvé !' });
+        }
+        bcrypt.compare(req.body.password, user.password)  
+          .then(valid => {
+            if (!valid) {
+              return res.status(401).json({ error: 'Mot de passe incorrect !' });
             }
-            bcrypt.compare(req.body.password, user.password)
-                .then(valid => {
-                    if (!valid) {
-                        return res.status(401).json({ error: 'Mot de passe incorrect!' })
-                    }
-                    const newToken = jsonwebtoken.sign(
-                        { userId: user._id },
-                        process.env.TOKEN_KEY,
-                        { expiresIn: '24h' }
-                    );
-                    req.session.token = newToken; 
-                    res.status(200).json({
-                        userId: user._id,
-                        token: newToken  
-                    })
-                })
-                .catch(error => res.status(500).json({ error }));
-        })
-        .catch(error => res.status(500).json({ error }));
-};
+            res.status(200).json({
+              userId: user._id,
+              token: jwt.sign(
+                { userId: user._id },
+                'RANDOM_TOKEN_SECRET',
+                { expiresIn: '8h' }
+              )
+            });
+          })
+          .catch(error => res.status(500).json({ error }));
+      })
+      .catch(error => res.status(500).json({ error }));
+  };

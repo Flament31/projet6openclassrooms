@@ -20,7 +20,8 @@ const sauceSchema = joi.object({
     description: joi.string().trim().min(1).required(),
     mainPepper: joi.string().trim().min(1).required(),
     heat: joi.number().integer().min(1).max(10).required()
-})
+});
+
 exports.sauce = (req, res, next) => {
     let sauce;
     if (req.file) {
@@ -35,7 +36,7 @@ exports.sauce = (req, res, next) => {
     } else {
         next();
     }
-}
+};
 
 const idSchema = joi.string().trim().length(24).required();
 exports.id = (req, res, next) => {
@@ -45,7 +46,7 @@ exports.id = (req, res, next) => {
     } else {
         next();
     }  
-}
+};
 
 const likeSchema = joi.object({
     userId: joi.string().trim().length(24).required(),
