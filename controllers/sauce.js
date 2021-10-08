@@ -73,34 +73,28 @@ exports.likeSauce = (req, res, next) => {
     const sauceId = req.params.id;
     Sauce.findOne({ _id: sauceId })
         .then(sauce => {
-            const newValues = {
-                usersLiked: sauce.usersLiked,
-                usersDisliked: sauce.usersDisliked,
-                likes: 0,
-                dislikes: 0
+            if (like == 0) {
+                if (sauce.usersLiked.includes(userId)) {
+                sauce.usersLiked.splice(sauce.usersLiked.indexOf(userId), 1);
+                sauce.likes -= 1;
+                }
+                if (sauce.usersDisliked.includes(userId)) {
+                sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(userId), 1);
+                sauce.dislikes -= 1;
+                }
+            } else if (like == -1 || like == 1) {
+                if (!(sauce[like == -1 ? 'usersDisliked' : 'usersLiked'].includes(userId))) {
+                sauce[like == -1 ? 'usersDisliked' : 'usersLiked'].push(userId);
+                sauce[like == -1 ? 'dislikes' : 'likes'] += 1;
+                if (sauce[like == -1 ? 'usersLiked' : 'usersDisliked'].includes(userId)) {
+                    sauce[like == -1 ? 'usersLiked' : 'usersDisliked'].splice(sauce[like == -1 ? 'usersLiked' : 'usersDisliked'].indexOf(userId), 1);
+                    sauce[like == -1 ? 'likes' : 'dislikes'] -= 1;
+                }
             }
-            switch (like) {
-                case 1:  
-                    newValues.usersLiked.push(userId);
-                    break;
-                case -1:  
-                    newValues.usersDisliked.push(userId);
-                    break;
-                case 0:  
-                    if (newValues.usersLiked.includes(userId)) {
-                        const index = newValues.usersLiked.indexOf(userId);
-                        newValues.usersLiked.splice(index, 1);
-                    } else {
-                        const index = newValues.usersDisliked.indexOf(userId);
-                        newValues.usersDisliked.splice(index, 1);
-                    }
-                    break;
-            };
-            newValues.likes = newValues.usersLiked.length;
-            newValues.dislikes = newValues.usersDisliked.length;
-            Sauce.updateOne({ _id: sauceId }, newValues )
-                .then(() => res.status(200).json({ message: 'Sauce notée !' }))
-                .catch(error => res.status(400).json({ error }))  
-        })
-        .catch(error => res.status(500).json({ error }));
-};
+        }
+        sauce.save()
+        .then(() => res.status(201).json({ message: 'Like/Dislike envoyé !' }))
+        .catch(error => res.status(400).json({ error }));
+    })
+    .catch(error => res.status(404).json({ error }));
+}

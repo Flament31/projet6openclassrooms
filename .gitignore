@@ -1,4 +1,5 @@
 node_modules
 images
-package_lock.json
+package-lock.json
 access.log
+.env
