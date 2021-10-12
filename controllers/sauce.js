@@ -72,24 +72,23 @@ exports.likeSauce = (req, res, next) => {
     const like = req.body.like;
     const sauceId = req.params.id;
     Sauce.findOne({ _id: sauceId })
-        .then(sauce => {
-            if (like == 0) {
-                if (sauce.usersLiked.includes(userId)) {
-                sauce.usersLiked.splice(sauce.usersLiked.indexOf(userId), 1);
-                sauce.likes -= 1;
-                }
-                if (sauce.usersDisliked.includes(userId)) {
+    .then(sauce => {
+        if (like == 0) {
+            if (sauce.usersLiked.includes(userId)) {
+            sauce.usersLiked.splice(sauce.usersLiked.indexOf(userId), 1);
+            sauce.likes -= 1;
+            }
+            else {
                 sauce.usersDisliked.splice(sauce.usersDisliked.indexOf(userId), 1);
                 sauce.dislikes -= 1;
-                }
-            } else if (like == -1 || like == 1) {
-                if (!(sauce[like == -1 ? 'usersDisliked' : 'usersLiked'].includes(userId))) {
+            }
+        } else if (like == -1 || like == 1) {
+            if (!(sauce[like == -1 ? 'usersDisliked' : 'usersLiked'].includes(userId))) {
                 sauce[like == -1 ? 'usersDisliked' : 'usersLiked'].push(userId);
                 sauce[like == -1 ? 'dislikes' : 'likes'] += 1;
-                if (sauce[like == -1 ? 'usersLiked' : 'usersDisliked'].includes(userId)) {
-                    sauce[like == -1 ? 'usersLiked' : 'usersDisliked'].splice(sauce[like == -1 ? 'usersLiked' : 'usersDisliked'].indexOf(userId), 1);
-                    sauce[like == -1 ? 'likes' : 'dislikes'] -= 1;
-                }
+            } else{
+                sauce[like == -1 ? 'usersLiked' : 'usersDisliked'].splice(sauce[like == -1 ? 'usersLiked' : 'usersDisliked'].indexOf(userId), 1);
+                sauce[like == -1 ? 'likes' : 'dislikes'] -= 1;
             }
         }
         sauce.save()
